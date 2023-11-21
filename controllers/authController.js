@@ -17,6 +17,23 @@ const userEmails = process.env.email;
 const OAuth2client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 OAuth2client.setCredentials({ refresh_token: REFRESH_TOKEN });
 
+
+//checking for custom errors
+// const handleCustomError = (err) => {
+//     const error = { email: '' };
+//     console.log(err.message, err.code);
+
+//     if (err.message.includes()) {
+//         Object.values(err.errors).forEach(({ properties }) => {
+//             error[properties.path] = properties.message
+//         });
+//     }
+
+//     if (err.code === 11000) {
+//         error.email = 'Email has already been registered';
+//     }
+// }
+
 async function sendMail(userEmail, verifyingCode) {
 
     try {
@@ -65,9 +82,10 @@ exports.sendVerificationCode = async (req, res) => {
         // console.log('===========================================');
         req.session.email = email;
         req.session.verificationCode = verificationCode;
-        res.status(200).json({ message: 'Verification code sent successfully' });
+        res.status(200).json({ sucess: true, message: 'Verification code sent successfully' });
     } catch (error) {
         console.error(error);
+        // const errors = handleCustomError(error);
         // Handle errors and respond with a 500 Internal Server Error
         res.status(500).json({ message: 'Error sending verification code.' });
     }
