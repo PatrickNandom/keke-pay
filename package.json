@@ -4,8 +4,11 @@
   "description": "backend project for keke-pay",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon app.js"
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "engines": {
+    "node": "19.4.0"
   },
   "author": "Patrick",
   "license": "ISC",

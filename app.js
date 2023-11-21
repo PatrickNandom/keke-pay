@@ -31,7 +31,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 // Enable CORS for Express application
-app.use(cors());
+app.use(cors('*'));
 
 app.use('/verification', authRouter)
 app.use('/user', userRouter)
