@@ -91,22 +91,25 @@ exports.sendVerificationCode = async (req, res) => {
     }
 };
 
+
 // confirm verification logic
 exports.confirmVerificationCode = async (req, res) => {
     try {
         const { codeToConfirm } = req.body;
-        // console.log(`from req.body ${codeToConfirm}`);
 
-        const storedCode = req.session.verificationCode
-        // console.log(`from confirm code ${storedCode}`);
+        // Check if codeToConfirm is empty
+        if (!codeToConfirm || codeToConfirm.trim() === '') {
+            return res.status(400).json({ message: 'Verification code cannot be empty' });
+        }
 
+        const storedCode = req.session.verificationCode;
 
         if (storedCode !== codeToConfirm) {
             return res.status(401).json({ message: 'Invalid verification code' });
         }
 
         // Respond with a success message
-        res.status(200).json({ message: 'Verification code confirmed successfully' });
+        res.status(200).json({ success: true, message: 'Verification code confirmed successfully' });
 
     } catch (error) {
         console.error(error);
@@ -114,6 +117,33 @@ exports.confirmVerificationCode = async (req, res) => {
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
+
+// confirm verification logic
+// exports.confirmVerificationCode = async (req, res) => {
+//     try {
+//         const { codeToConfirm } = req.body;
+//         // console.log(`from req.body ${codeToConfirm}`);
+//         if (codeToConfirm === ''){
+//             res.status()
+//         }
+
+//             const storedCode = req.session.verificationCode
+//         // console.log(`from confirm code ${storedCode}`);
+
+
+//         if (storedCode !== codeToConfirm) {
+//             return res.status(401).json({ message: 'Invalid verification code' });
+//         }
+
+//         // Respond with a success message
+//         res.status(200).json({ succes: true, message: 'Verification code confirmed successfully' });
+
+//     } catch (error) {
+//         console.error(error);
+//         // Handle errors and respond with a 500 Internal Server Error
+//         res.status(500).json({ message: 'Internal Server Error' });
+//     }
+// };
 
 
 // Final Registration Step
@@ -148,7 +178,7 @@ exports.registerUser = async (req, res) => {
 
         // Save the user to the database
         await newUser.save();
-        res.status(201).json({ message: 'User registered successfully.' });
+        res.status(201).json({ success: true, message: 'User registered successfully.' });
 
     } catch (error) {
         console.error(error);
@@ -162,8 +192,13 @@ exports.registerUser = async (req, res) => {
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
 
+    // Check if email or password is missing
+    if (!email || !password) {
+        return res.status(400).json({ message: 'Email and password are required.' });
+    }
+
     try {
-        // Find the user with the provided phone number
+        // Find the user with the provided email
         const user = await User.findOne({ email });
 
         if (!user) {
@@ -186,5 +221,3 @@ exports.loginUser = async (req, res) => {
         res.status(500).json({ message: 'Login failed.' });
     }
 };
-
-
