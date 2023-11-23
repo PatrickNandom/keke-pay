@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
-const bodyParser = require('body-parser');
+// const bodyParser = require('body-parser');
 const cors = require('cors');
 const session = require('express-session');
 const mongoose = require('mongoose');
@@ -19,7 +19,24 @@ app.use(session({
     secret: process.env.secretKey,
     resave: false,
     saveUninitialized: true,
+    cookie: {
+        sameSite: 'None',
+        secure: true,
+    },
 }));
+
+// const store = new MongoDbStore({
+//     mongooseConnection: mongoose.connection,
+//     collection: "emailinfo"
+// });
+
+// app.use(session({
+//     store: store,
+//     secret: process.env.secretKey,
+//     resave: false,
+//     saveUninitialized: true,
+// }));
+
 
 const authRouter = require('./routes/authRoutes');
 const userRouter = require('./routes/userRoute')
@@ -27,16 +44,18 @@ const userRouter = require('./routes/userRoute')
 // .env configuration 
 
 // Configure body-parser to handle URL-encoded data
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+// app.use(bodyParser.urlencoded({ extended: true }));
+// app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 // Enable CORS for Express application
-app.use(cors('*'));
+app.use(cors());
 
 app.use('/verification', authRouter)
 app.use('/user', userRouter)
 
-//mongoDB connection
+//mongoDB connection+
 const uri = process.env.URI
 
 mongoose.connect(uri).then(() => {

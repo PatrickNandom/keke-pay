@@ -18,21 +18,21 @@ const OAuth2client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_U
 OAuth2client.setCredentials({ refresh_token: REFRESH_TOKEN });
 
 
-//checking for custom errors
-// const handleCustomError = (err) => {
-//     const error = { email: '' };
-//     console.log(err.message, err.code);
+// checking for custom errors
+const handleCustomError = (err) => {
+    const error = { email: '' };
+    console.log(err.message, err.code);
 
-//     if (err.message.includes()) {
-//         Object.values(err.errors).forEach(({ properties }) => {
-//             error[properties.path] = properties.message
-//         });
-//     }
+    if (err.message.includes()) {
+        Object.values(err.errors).forEach(({ properties }) => {
+            error[properties.path] = properties.message
+        });
+    }
 
-//     if (err.code === 11000) {
-//         error.email = 'Email has already been registered';
-//     }
-// }
+    if (err.code === 11000) {
+        error.email = 'Email has already been registered';
+    }
+}
 
 async function sendMail(userEmail, verifyingCode) {
 
@@ -75,10 +75,11 @@ exports.sendVerificationCode = async (req, res) => {
         // Generate a random 6-digit verification code
         const verificationCode = randomize('0', 6);
 
-        const sendSomeEmail = await sendMail(email, verificationCode);
-        console.log('Email sent', sendSomeEmail);
+        // const sendSomeEmail = await sendMail(email, verificationCode);
+        // console.log('Email sent', sendSomeEmail);
 
         // console.log(`from sendVerification ${verificationCode}`);
+        console.log(`genCode = ${verificationCode}`);
         // console.log('===========================================');
         req.session.email = email;
         req.session.verificationCode = verificationCode;
@@ -96,6 +97,7 @@ exports.sendVerificationCode = async (req, res) => {
 exports.confirmVerificationCode = async (req, res) => {
     try {
         const { codeToConfirm } = req.body;
+        console.log(`code from frontend ${codeToConfirm}`);
 
         // Check if codeToConfirm is empty
         if (!codeToConfirm || codeToConfirm.trim() === '') {
@@ -103,6 +105,7 @@ exports.confirmVerificationCode = async (req, res) => {
         }
 
         const storedCode = req.session.verificationCode;
+        console.log(`stored code from sesion ${storedCode}`);
 
         if (storedCode !== codeToConfirm) {
             return res.status(401).json({ message: 'Invalid verification code' });
@@ -221,3 +224,27 @@ exports.loginUser = async (req, res) => {
         res.status(500).json({ message: 'Login failed.' });
     }
 };
+
+
+
+
+// Logout User
+exports.logoutUser = (req, res) => {
+    try {
+        // Destroy the session to log out the user
+        req.session.destroy((err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ message: 'Error logging out.' });
+            }
+
+            // Redirect or send a response indicating successful logout
+            res.status(200).json({ success: true, message: 'Logout successful.' });
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error logging out.' });
+    }
+};
+
+
