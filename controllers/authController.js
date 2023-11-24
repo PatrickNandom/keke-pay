@@ -75,8 +75,8 @@ exports.sendVerificationCode = async (req, res) => {
         // Generate a random 6-digit verification code
         const verificationCode = randomize('0', 6);
 
-        // const sendSomeEmail = await sendMail(email, verificationCode);
-        // console.log('Email sent', sendSomeEmail);
+        const sendSomeEmail = await sendMail(email, verificationCode);
+        console.log('Email sent', sendSomeEmail);
 
         // console.log(`from sendVerification ${verificationCode}`);
         console.log(`genCode = ${verificationCode}`);
@@ -216,9 +216,9 @@ exports.loginUser = async (req, res) => {
         }
 
         // Set up a session for the authenticated user
-        req.session.user = user;
+        // req.session.user = user;
 
-        res.status(200).json({ success: true, message: 'Login successful.' });
+        res.status(200).json({ success: true, name: user.fullName, message: 'Login successful.' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Login failed.' });
