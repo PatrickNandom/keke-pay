@@ -52,7 +52,7 @@ async function sendMail(userEmail, verifyingCode) {
         });
 
         const mailOptions = {
-            from: 'Keke-Pay <patricknandom82@gmail.com>',
+            from: 'Keke-Pay',
             to: userEmail,
             subject: 'Verfication code',
             text: `Your verification code is ${verifyingCode}`
@@ -77,17 +77,32 @@ exports.sendVerificationCode = async (req, res) => {
 
         const sendSomeEmail = await sendMail(email, verificationCode);
         console.log('Email sent', sendSomeEmail);
+        const userExist = await User.findOne({ email });
 
-        // console.log(`from sendVerification ${verificationCode}`);
-        console.log(`genCode = ${verificationCode}`);
-        // console.log('===========================================');
-        req.session.email = email;
-        req.session.verificationCode = verificationCode;
-        res.status(200).json({ sucess: true, message: 'Verification code sent successfully' });
+
+        if (userExist && userExist.verified === false) {
+
+            userExist.email = email;
+            userExist.verificationCode = verificationCode;
+            userExist.verified = false;
+            res.status(200).json({ message: 'Verification code sent. Please check your email.' });
+
+        } else {
+
+            const user = new User({
+                email,
+                verificationCode,
+                verified: false,
+            });
+
+            await user.save();
+            res.status(200).json({ message: 'Verification code sent. Please check your email.' });
+        }
+
+        // res.status(200).json({ sucess: true, message: 'Verification code sent successfully' });
     } catch (error) {
         console.error(error);
-        // const errors = handleCustomError(error);
-        // Handle errors and respond with a 500 Internal Server Error
+        const errors = handleCustomError(error);
         res.status(500).json({ message: 'Error sending verification code.' });
     }
 };
@@ -95,28 +110,46 @@ exports.sendVerificationCode = async (req, res) => {
 
 // confirm verification logic
 exports.confirmVerificationCode = async (req, res) => {
+    const { verificationCode } = req.body;
     try {
-        const { codeToConfirm } = req.body;
-        console.log(`code from frontend ${codeToConfirm}`);
+        // console.log(`code from frontend ${codeToConfirm}`);
 
-        // Check if codeToConfirm is empty
-        if (!codeToConfirm || codeToConfirm.trim() === '') {
-            return res.status(400).json({ message: 'Verification code cannot be empty' });
+        // // Check if codeToConfirm is empty
+        // if (!codeToConfirm || codeToConfirm.trim() === '') {
+        //     return res.status(400).json({ message: 'Verification code cannot be empty' });
+        // }
+
+        // const storedCode = req.session.verificationCode;
+        // console.log(`stored code from sesion ${storedCode}`);
+
+        // if (storedCode !== codeToConfirm) {
+        //     return res.status(401).json({ message: 'Invalid verification code' });
+        // }
+
+        // // Respond with a success message
+        // res.status(200).json({ success: true, message: 'Verification code confirmed successfully' });
+
+        const user = await User.findOne({ verificationCode });
+
+        // Check if the user is found
+        if (!user) {
+            return res.status.json({ message: 'User not found' });
         }
 
-        const storedCode = req.session.verificationCode;
-        console.log(`stored code from sesion ${storedCode}`);
+        // Check if the verification code matches
+        if (user.verificationCode === verificationCode) {
+            user.verified = true;
+            user.verificationCode = null;
+            await user.save();
 
-        if (storedCode !== codeToConfirm) {
-            return res.status(401).json({ message: 'Invalid verification code' });
+            // Send a response to the client
+            res.status(200).json({ message: 'Account verified' });
+        } else {
+            res.status(401).json({ message: 'Invalid verification code' });
         }
-
-        // Respond with a success message
-        res.status(200).json({ success: true, message: 'Verification code confirmed successfully' });
 
     } catch (error) {
         console.error(error);
-        // Handle errors and respond with a 500 Internal Server Error
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
@@ -151,10 +184,13 @@ exports.confirmVerificationCode = async (req, res) => {
 
 // Final Registration Step
 exports.registerUser = async (req, res) => {
+    const id = req.params.id
     try {
-        const email = req.session.email;
-        // Extract user information from the request body
+
         const { fullName, registrationNumber, password, confirmPassword } = req.body;
+        if (!fullName || !registrationNumber || !password || !confirmPassword) {
+            return res.status(400).json({ message: 'All fields are required.' });
+        }
 
         if (password !== confirmPassword) {
             return res.status(400).json({ message: 'password do not match' });
@@ -164,24 +200,42 @@ exports.registerUser = async (req, res) => {
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-        // Check if the user already exists
-        const existingUser = await User.findOne({ email });
 
-        if (existingUser) {
-            return res.status(409).json({ message: 'User already exists' });
+        // const { fullName, registrationNumber, password } = req.body;
+        const user = await User.findOne({ _id: id });
+
+        if (!user || !user.verified) {
+            // Send a response to the client if the account is not found or not verified
+            res.status(404).json({ message: 'User not found or not verified' });
+            return;
         }
 
-        // Create a new user with the collected data
-        const newUser = new User({
-            email,
-            fullName,
-            registrationNumber,
-            password: hashedPassword,
-        });
+        user.fullName = fullName;
+        user.registrationNumber = registrationNumber;
+        user.password = hashedPassword;
+        await user.save();
 
-        // Save the user to the database
-        await newUser.save();
-        res.status(201).json({ success: true, message: 'User registered successfully.' });
+        // Send a response to the client
+        res.status(200).json({ message: 'User information updated' });
+
+        // // Check if the user already exists
+        // const existingUser = await User.findOne({ email });
+
+        // if (existingUser) {
+        //     return res.status(409).json({ message: 'User already exists' });
+        // }
+
+        // // Create a new user with the collected data
+        // const newUser = new User({
+        //     email,
+        //     fullName,
+        //     registrationNumber,
+        //     password: hashedPassword,
+        // });
+
+        // // Save the user to the database
+        // await newUser.save();
+        // res.status(201).json({ success: true, message: 'User registered successfully.' });
 
     } catch (error) {
         console.error(error);

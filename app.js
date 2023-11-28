@@ -2,41 +2,10 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 // const bodyParser = require('body-parser');
+// const ConnectMongoDbSession = require('connect-mongodb-session')
 const cors = require('cors');
-const session = require('express-session');
 const mongoose = require('mongoose');
-const ConnectMongoDbSession = require('connect-mongodb-session')
-const MongoDbStore = ConnectMongoDbSession(session)
-
-const store = new MongoDbStore({
-    uri: process.env.URI,
-    databaseName: "Keke",
-    collection: "emailinfo"
-});
-
-app.use(session({
-    store: store,
-    secret: process.env.secretKey,
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-        sameSite: 'None',
-        secure: true,
-    },
-}));
-
-// const store = new MongoDbStore({
-//     mongooseConnection: mongoose.connection,
-//     collection: "emailinfo"
-// });
-
-// app.use(session({
-//     store: store,
-//     secret: process.env.secretKey,
-//     resave: false,
-//     saveUninitialized: true,
-// }));
-
+// const MongoDbStore = ConnectMongoDbSession(session)
 
 const authRouter = require('./routes/authRoutes');
 const userRouter = require('./routes/userRoute')
@@ -63,8 +32,6 @@ mongoose.connect(uri).then(() => {
 }).catch(error => {
     console.error('Error while connecting to the database', error)
 })
-
-
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
