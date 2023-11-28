@@ -99,9 +99,11 @@ exports.sendVerificationCode = async (req, res) => {
             res.status(200).json({ message: 'Verification code sent. Please check your email.' });
         }
 
+        res.status.json()
+
         // res.status(200).json({ sucess: true, message: 'Verification code sent successfully' });
     } catch (error) {
-        console.error(error);
+        console.log("error sending verification code", error);
         const errors = handleCustomError(error);
         res.status(500).json({ message: 'Error sending verification code.' });
     }
