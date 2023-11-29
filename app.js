@@ -19,7 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Enable CORS for Express application
-app.use(cors());
+app.use(cors({origin: "*"}));
 
 app.use('/verification', authRouter)
 app.use('/user', userRouter)

@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt');
 const randomize = require('randomatic');
 const { google } = require('googleapis')
 const User = require('../models/User');
@@ -74,9 +74,11 @@ exports.sendVerificationCode = async (req, res) => {
 
         // Generate a random 6-digit verification code
         const verificationCode = randomize('0', 6);
+        console.log(verificationCode);
 
         const sendSomeEmail = await sendMail(email, verificationCode);
-        console.log('Email sent', sendSomeEmail);
+        // console.log('Email sent', sendSomeEmail);
+        console.log(verificationCode);
         const userExist = await User.findOne({ email });
 
 
@@ -99,7 +101,7 @@ exports.sendVerificationCode = async (req, res) => {
             res.status(200).json({ message: 'Verification code sent. Please check your email.' });
         }
 
-        res.status.json()
+        // res.status.json()
 
         // res.status(200).json({ sucess: true, message: 'Verification code sent successfully' });
     } catch (error) {
