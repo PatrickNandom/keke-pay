@@ -1,6 +1,14 @@
+const Transaction = require('../models/Transaction');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const { MongoClient, ObjectId } = require('mongodb');
+const Flutterwave = require('flutterwave-node-v3');
+const flw = new Flutterwave(process.env.PUBLIC_KEY, process.env.SECRET_KEY);
+const { v4: uuidv4 } = require('uuid');
+const uuid = uuidv4();
+
+require('dotenv').config();
+
 
 const client = new MongoClient(process.env.URI);
 client.connect();
@@ -154,3 +162,196 @@ exports.deleteUser = async (req, res) => {
         res.status(500).json({ message: 'Failed to delete user' });
     }
 };
+
+
+
+// function for adding fund to user wallet
+exports.addFund = async (req, res) => {
+    try {
+        const userId = req.params.userId
+        const user = await User.findById(userId);
+        const { amount, cardNumber, mm, yy, cvv, pin } = req.body;
+        const payload = {
+            "card_number": cardNumber,
+            "cvv": cvv,
+            "expiry_month": mm,
+            "expiry_year": yy,
+            "currency": "NGN",
+            "amount": amount,
+            "redirect_url": "https://www.google.com",
+            "fullname": user.fullName,
+            "email": user.email,
+            "enckey": process.env.ENCRYPTION_KEY,
+            "tx_ref": uuid,
+            // "pin": pin
+        };
+        // Attempt to charge the card using Flutterwave API
+        const response = await flw.Charge.card(payload);
+        // console.log(response);
+
+        if (response.meta.authorization.mode === pin) {
+            let payload2 = { ...payload }
+            payload2.authorization = {
+                "mode": "pin",
+                "fields": [
+                    "pin"
+                ],
+                "pin": pin
+            }
+            const reCallCharge = await flw.Charge.card(payload2)
+            const callValidate = await flw.Charge.validate({
+                "otp": "12345",
+                "flw_ref": reCallCharge.data.flw_ref
+            })
+            // console.log(callValidate);
+            // console.log(callValidate) uncomment for debugging purposes
+        }
+
+        if (response.meta.authorization.mode === 'redirect') {
+            let url = response.meta.authorization.redirect
+            open(url)
+        }
+        // res.json({ response });
+        // Transaction succeeded
+
+        // Update user balance
+        user.balance += parseFloat(amount);
+        await user.save();
+
+        // Save transaction details
+        const transaction = new Transaction({
+            user: user._id,
+            date: new Date(),
+            description: 'Adding funds to wallet',
+            amount: parseFloat(amount),
+            status: 'completed',
+        });
+        await transaction.save();
+
+        const userBalance = user.balance;
+        console.log(userBalance);
+        res.status(200).json({ userBalance, response })
+    } catch (error) {
+        console.error('Error processing payment:', error);
+        res.status(500).json({ error: 'Error processing payment' });
+
+    }
+}
+
+
+
+
+
+
+
+// exports.addFund = async (req, res) => {
+//     try {
+//         const userId = req.params.userId;
+//         const user = await User.findById(userId);
+
+//         console.log(user);
+
+//         if (!user) {
+//             return res.status(404).json({ error: 'User not found' });
+//         }
+
+//         const { amount, cardNumber, mm, yy, cvv, pin } = req.body;
+//         const payload = {
+//             "card_number": cardNumber,
+//             "cvv": cvv,
+//             "expiry_month": mm,
+//             "expiry_year": yy,
+//             "currency": "NGN",
+//             "amount": amount,
+//             "redirect_url": "https://www.google.com",
+//             "fullname": user.fullName,
+//             "email": user.email,
+//             "enckey": process.env.ENCRYPTION_KEY,
+//             "tx_ref": uuid,
+//             "pin": pin
+//         };
+
+//         // Attempt to charge the card using Flutterwave API
+//         const response = await flw.Charge.card(payload);
+//         console.log(response);
+
+//         if (response.status === 'successStatus') {
+//             // Transaction succeeded
+
+//             // Update user balance
+//             user.balance += parseFloat(amount);
+//             await user.save();
+
+//             // Save transaction details
+//             const transaction = new Transaction({
+//                 user: user._id,
+//                 date: new Date(),
+//                 description: 'Adding funds to wallet',
+//                 amount: parseFloat(amount),
+//                 receiptNumber: generateUniqueReceiptNumber(), // Replace with your logic
+//                 status: 'completed',
+//             });
+//             await transaction.save();
+
+//             res.status(200).json({ message: 'Payment successful' });
+//         } else {
+//             // Transaction failed
+//             res.status(400).json({ error: response.message });
+//         }
+//     } catch (error) {
+//         console.error('Error processing payment:', error);
+//         res.status(500).json({ error: 'Error processing payment' });
+
+//     }
+// };
+
+
+// const user = await User.findById(userId);
+// exports.addFund = async (req, res){
+
+//     const { amount, cardNumber, mm, yy, cvv, pin } = req.body;
+//     const payload = {
+//         "card_number": cardNumber,
+//         "cvv": cvv,
+//         "expiry_month": mm,
+//         "expiry_year": yy,
+//         "currency": "NGN",
+//         "amount": amount,
+//         "redirect_url": "https://www.google.com",
+//         "fullname": user.fullName,
+//         "email": user.email,
+//         "enckey": process.env.ENCRYPTION_KEY,
+//         "tx_ref": uuid
+//     }
+
+//     try {
+
+//         const response = await flw.Charge.card(payload)
+//         console.log(response)
+
+//         if (response.success) {
+//             // Transaction succeeded
+//             user.balance += parseFloat(amount);
+//             await user.save();
+
+//             // Save transaction details to your database
+//             const transaction = new Transaction({
+//                 user: user._id,
+//                 date: new Date(),
+//                 description: 'Adding funds to wallet',
+//                 amount: parseFloat(amount),
+//                 receiptNumber: generateUniqueReceiptNumber(),
+//                 status: 'completed',
+//             });
+//             await transaction.save();
+
+//             res.status(200).json({ message: 'Payment successful' });
+//         } else {
+//             // Transaction failed
+//             res.status(400).json({ error: result.message });
+//         }
+//     } catch (error) {
+//         console.error('Error processing payment:', error);
+//         res.status(500).json({ error: 'Error processing payment' });
+//     }
+// }
