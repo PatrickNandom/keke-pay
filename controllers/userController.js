@@ -166,6 +166,7 @@ exports.deleteUser = async (req, res) => {
 
 
 // function for adding fund to user wallet
+let count = 0;
 exports.addFund = async (req, res) => {
     try {
         const userId = req.params.userId
@@ -183,12 +184,8 @@ exports.addFund = async (req, res) => {
             "email": user.email,
             "enckey": process.env.ENCRYPTION_KEY,
             "tx_ref": uuid,
-            // "pin": pin
         };
-        // Attempt to charge the card using Flutterwave API
         const response = await flw.Charge.card(payload);
-        // console.log(response);
-
         if (response.meta.authorization.mode === pin) {
             let payload2 = { ...payload }
             payload2.authorization = {
@@ -203,19 +200,16 @@ exports.addFund = async (req, res) => {
                 "otp": "12345",
                 "flw_ref": reCallCharge.data.flw_ref
             })
-            // console.log(callValidate);
-            // console.log(callValidate) uncomment for debugging purposes
         }
 
         if (response.meta.authorization.mode === 'redirect') {
             let url = response.meta.authorization.redirect
             open(url)
         }
-        // res.json({ response });
         // Transaction succeeded
-
-        // Update user balance
         user.balance += parseFloat(amount);
+        count++;
+        user.totalTransactions = count
         await user.save();
 
         // Save transaction details
@@ -225,12 +219,15 @@ exports.addFund = async (req, res) => {
             description: 'Adding funds to wallet',
             amount: parseFloat(amount),
             status: 'completed',
+            totalTransactions: count
         });
         await transaction.save();
 
+        const userTransactions = await Transaction.find({ user: user._id });
         const userBalance = user.balance;
+        const userTotalNumberOftransactions = user.totalTransactions
         console.log(userBalance);
-        res.status(200).json({ userBalance, response })
+        res.status(200).json({ success: true, userTotalNumberOftransactions, userBalance, userTransactions })
     } catch (error) {
         console.error('Error processing payment:', error);
         res.status(500).json({ error: 'Error processing payment' });
@@ -239,119 +236,9 @@ exports.addFund = async (req, res) => {
 }
 
 
+exports.transferFund = async (req, res) => {
+
+}
 
 
 
-
-
-// exports.addFund = async (req, res) => {
-//     try {
-//         const userId = req.params.userId;
-//         const user = await User.findById(userId);
-
-//         console.log(user);
-
-//         if (!user) {
-//             return res.status(404).json({ error: 'User not found' });
-//         }
-
-//         const { amount, cardNumber, mm, yy, cvv, pin } = req.body;
-//         const payload = {
-//             "card_number": cardNumber,
-//             "cvv": cvv,
-//             "expiry_month": mm,
-//             "expiry_year": yy,
-//             "currency": "NGN",
-//             "amount": amount,
-//             "redirect_url": "https://www.google.com",
-//             "fullname": user.fullName,
-//             "email": user.email,
-//             "enckey": process.env.ENCRYPTION_KEY,
-//             "tx_ref": uuid,
-//             "pin": pin
-//         };
-
-//         // Attempt to charge the card using Flutterwave API
-//         const response = await flw.Charge.card(payload);
-//         console.log(response);
-
-//         if (response.status === 'successStatus') {
-//             // Transaction succeeded
-
-//             // Update user balance
-//             user.balance += parseFloat(amount);
-//             await user.save();
-
-//             // Save transaction details
-//             const transaction = new Transaction({
-//                 user: user._id,
-//                 date: new Date(),
-//                 description: 'Adding funds to wallet',
-//                 amount: parseFloat(amount),
-//                 receiptNumber: generateUniqueReceiptNumber(), // Replace with your logic
-//                 status: 'completed',
-//             });
-//             await transaction.save();
-
-//             res.status(200).json({ message: 'Payment successful' });
-//         } else {
-//             // Transaction failed
-//             res.status(400).json({ error: response.message });
-//         }
-//     } catch (error) {
-//         console.error('Error processing payment:', error);
-//         res.status(500).json({ error: 'Error processing payment' });
-
-//     }
-// };
-
-
-// const user = await User.findById(userId);
-// exports.addFund = async (req, res){
-
-//     const { amount, cardNumber, mm, yy, cvv, pin } = req.body;
-//     const payload = {
-//         "card_number": cardNumber,
-//         "cvv": cvv,
-//         "expiry_month": mm,
-//         "expiry_year": yy,
-//         "currency": "NGN",
-//         "amount": amount,
-//         "redirect_url": "https://www.google.com",
-//         "fullname": user.fullName,
-//         "email": user.email,
-//         "enckey": process.env.ENCRYPTION_KEY,
-//         "tx_ref": uuid
-//     }
-
-//     try {
-
-//         const response = await flw.Charge.card(payload)
-//         console.log(response)
-
-//         if (response.success) {
-//             // Transaction succeeded
-//             user.balance += parseFloat(amount);
-//             await user.save();
-
-//             // Save transaction details to your database
-//             const transaction = new Transaction({
-//                 user: user._id,
-//                 date: new Date(),
-//                 description: 'Adding funds to wallet',
-//                 amount: parseFloat(amount),
-//                 receiptNumber: generateUniqueReceiptNumber(),
-//                 status: 'completed',
-//             });
-//             await transaction.save();
-
-//             res.status(200).json({ message: 'Payment successful' });
-//         } else {
-//             // Transaction failed
-//             res.status(400).json({ error: result.message });
-//         }
-//     } catch (error) {
-//         console.error('Error processing payment:', error);
-//         res.status(500).json({ error: 'Error processing payment' });
-//     }
-// }

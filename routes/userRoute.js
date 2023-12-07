@@ -1,7 +1,7 @@
 const express = require('express');
 const userRouter = express.Router();
 
-const { getAllUsers, getSingleUser, upDateUser, changePassword, deleteUser, addFund } = require('../controllers/userController')
+const { getAllUsers, getSingleUser, upDateUser, changePassword, deleteUser, addFund, transferFund } = require('../controllers/userController')
 
 //route for getting all users
 userRouter.get('/', getAllUsers);
@@ -17,6 +17,8 @@ userRouter.delete('/delete/:id', deleteUser);
 
 
 // route for adding fund to user balance
-userRouter.post('/add-fund/:userId', addFund)
+userRouter.post('/add-fund/:userId', addFund);
+// transfere fund 
+userRouter.post('/transfer-fund/:userId', transferFund);
 
 module.exports = userRouter;

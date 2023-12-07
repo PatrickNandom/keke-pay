@@ -74,6 +74,8 @@ exports.sendVerificationCode = async (req, res) => {
 
         // Generate a random 6-digit verification code
         const verificationCode = randomize('0', 6);
+        console.log(`print verification code ${verificationCode}`);
+        console.log(`checking for the type of verification code ${typeof verificationCode}`);
 
         const sendSomeEmail = await sendMail(email, verificationCode);
         // console.log('Email sent', sendSomeEmail);
@@ -102,7 +104,7 @@ exports.sendVerificationCode = async (req, res) => {
 
             await user.save();
 
-            res.status(200).json({ message: 'Verification code sent. Please check your email.' });
+            res.status(200).json({ success: true, message: 'Verification code sent. Please check your email.' });
             console.log(`executed from else block ${verificationCode}`);
             return
         }
@@ -147,13 +149,17 @@ exports.confirmVerificationCode = async (req, res) => {
         }
 
         // Check if the verification code matches
-        if (user.verificationCode === verificationCode) {
+        if (user.verificationCode == verificationCode) {
             user.verified = true;
             user.verificationCode = null;
             await user.save();
 
             // Send a response to the client
-            res.status(200).json({ message: 'Account verified' });
+            res.status(200).json({
+                success: true,
+                userId: user._id,
+                message: 'Account verified'
+            });
         } else {
             res.status(401).json({ message: 'Invalid verification code' });
         }
@@ -282,7 +288,7 @@ exports.loginUser = async (req, res) => {
         // Include the user ID in the response
         res.status(200).json({
             success: true,
-            userId: user._id, // Include the user ID in the response
+            userId: user._id,
             name: user.fullName,
             message: 'Login successful.',
         });
@@ -291,43 +297,6 @@ exports.loginUser = async (req, res) => {
         res.status(500).json({ message: 'Login failed.' });
     }
 };
-
-//Login User 
-// exports.loginUser = async (req, res) => {
-//     const { email, password } = req.body;
-
-//     // Check if email or password is missing
-//     if (!email || !password) {
-//         return res.status(400).json({ message: 'Email and password are required.' });
-//     }
-
-//     try {
-//         // Find the user with the provided email
-//         const user = await User.findOne({ email });
-
-//         if (!user) {
-//             return res.status(401).json({ message: 'User not found.' });
-//         }
-
-//         // Compare the provided password with the stored hashed password
-//         const passwordMatch = await bcrypt.compare(password, user.password);
-
-//         if (!passwordMatch) {
-//             return res.status(401).json({ message: 'Invalid password.' });
-//         }
-
-//         // Set up a session for the authenticated user
-//         // req.session.user = user;
-
-//         res.status(200).json({ success: true, name: user.fullName, message: 'Login successful.' });
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ message: 'Login failed.' });
-//     }
-// };
-
-
-
 
 // Logout User
 exports.logoutUser = (req, res) => {
