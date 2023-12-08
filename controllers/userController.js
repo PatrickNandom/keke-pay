@@ -178,7 +178,7 @@ exports.addFund = async (req, res) => {
             "expiry_month": mm,
             "expiry_year": yy,
             "currency": "NGN",
-            "amount": amount,
+            "amount": +amount,
             "redirect_url": "https://www.google.com",
             "fullname": user.fullName,
             "email": user.email,

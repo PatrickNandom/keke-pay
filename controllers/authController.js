@@ -290,6 +290,7 @@ exports.loginUser = async (req, res) => {
             success: true,
             userId: user._id,
             name: user.fullName,
+            balance: user.balance,
             message: 'Login successful.',
         });
     } catch (error) {
