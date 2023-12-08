@@ -74,8 +74,8 @@ exports.sendVerificationCode = async (req, res) => {
 
         // Generate a random 6-digit verification code
         const verificationCode = randomize('0', 6);
-        console.log(`print verification code ${verificationCode}`);
-        console.log(`checking for the type of verification code ${typeof verificationCode}`);
+        console.log(`print verification code from randomize ${verificationCode}`);
+        console.log(`Type of verification code from randomize ${typeof verificationCode}`);
 
         const sendSomeEmail = await sendMail(email, verificationCode);
         // console.log('Email sent', sendSomeEmail);
@@ -124,7 +124,8 @@ exports.sendVerificationCode = async (req, res) => {
 exports.confirmVerificationCode = async (req, res) => {
     const { verificationCode } = req.body;
     try {
-        // console.log(`code from frontend ${codeToConfirm}`);
+        console.log(`Code to confirm from req.body ${verificationCode}`);
+        console.log(`Type of code code to confirm from req.body${typeof verificationCode}`);
 
         // // Check if codeToConfirm is empty
         // if (!codeToConfirm || codeToConfirm.trim() === '') {
