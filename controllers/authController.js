@@ -158,7 +158,7 @@ exports.confirmVerificationCode = async (req, res) => {
             res.status(200).json({
                 success: true,
                 userId: user._id,
-                message: 'Account verified'
+                message: 'Account verified successfully'
             });
         } else {
             res.status(401).json({ message: 'Invalid verification code' });
@@ -232,7 +232,7 @@ exports.registerUser = async (req, res) => {
         await user.save();
 
         // Send a response to the client
-        res.status(200).json({ message: 'User information updated' });
+        res.status(200).json({ success: true, message: 'User information updated' });
 
         // // Check if the user already exists
         // const existingUser = await User.findOne({ email });
