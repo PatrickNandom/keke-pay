@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('./controllers/paymentController');
 const express = require('express');
 const app = express();
 // const bodyParser = require('body-parser');
@@ -8,7 +9,8 @@ const mongoose = require('mongoose');
 // const MongoDbStore = ConnectMongoDbSession(session)
 
 const authRouter = require('./routes/authRoutes');
-const userRouter = require('./routes/userRoute')
+const userRouter = require('./routes/userRoute');
+const paymentRouter = require('./routes/paymentRoute');
 
 // app.use((req, res, next) => {
 //   res.header('Access-Control-Allow-Origin', 'https://frontend-keke-pay.vercel.app');
@@ -28,8 +30,9 @@ app.use(express.json());
 app.use(cors({ origin: "*" }));
 
 
-app.use('/verification', authRouter)
-app.use('/user', userRouter)
+app.use('/verification', authRouter);
+app.use('/user', userRouter);
+app.use('/', paymentRouter);
 
 //mongoDB connection+
 const uri = process.env.URI

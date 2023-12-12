@@ -163,10 +163,8 @@ exports.deleteUser = async (req, res) => {
     }
 };
 
-
-
 // function for adding fund to user wallet
-let count = 0;
+// let count = 0;
 exports.addFund = async (req, res) => {
     try {
         const userId = req.params.userId
@@ -208,8 +206,8 @@ exports.addFund = async (req, res) => {
         }
         // Transaction succeeded
         user.balance += parseFloat(amount);
-        count++;
-        user.totalTransactions = count
+        user.totalTransactions = (user.totalTransactions || 0) + 1;
+
         await user.save();
 
         // Save transaction details
@@ -219,18 +217,19 @@ exports.addFund = async (req, res) => {
             description: 'Adding funds to wallet',
             amount: parseFloat(amount),
             status: 'completed',
-            totalTransactions: count
+            totalTransactions: user.totalTransactions
         });
+
         await transaction.save();
 
         const userTransactions = await Transaction.find({ user: user._id });
         const userBalance = user.balance;
         const userTotalNumberOftransactions = user.totalTransactions
         console.log(userBalance);
-        res.status(200).json({ success: true, userTotalNumberOftransactions, userBalance, userTransactions })
+        res.status(200).json({ success: true, message: 'fund added successfully', userTotalNumberOftransactions, userBalance, userTransactions })
     } catch (error) {
         console.error('Error processing payment:', error);
-        res.status(500).json({ error: 'Error processing payment' });
+        res.status(500).json({ message: 'Error processing payment' });
 
     }
 }

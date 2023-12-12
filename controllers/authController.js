@@ -126,22 +126,6 @@ exports.confirmVerificationCode = async (req, res) => {
     try {
         console.log(`Code to confirm from req.body ${verificationCode}`);
         console.log(`Type of code code to confirm from req.body${typeof verificationCode}`);
-
-        // // Check if codeToConfirm is empty
-        // if (!codeToConfirm || codeToConfirm.trim() === '') {
-        //     return res.status(400).json({ message: 'Verification code cannot be empty' });
-        // }
-
-        // const storedCode = req.session.verificationCode;
-        // console.log(`stored code from sesion ${storedCode}`);
-
-        // if (storedCode !== codeToConfirm) {
-        //     return res.status(401).json({ message: 'Invalid verification code' });
-        // }
-
-        // // Respond with a success message
-        // res.status(200).json({ success: true, message: 'Verification code confirmed successfully' });
-
         const user = await User.findOne({ verificationCode });
 
         // Check if the user is found
@@ -171,40 +155,17 @@ exports.confirmVerificationCode = async (req, res) => {
     }
 };
 
-// confirm verification logic
-// exports.confirmVerificationCode = async (req, res) => {
-//     try {
-//         const { codeToConfirm } = req.body;
-//         // console.log(`from req.body ${codeToConfirm}`);
-//         if (codeToConfirm === ''){
-//             res.status()
-//         }
-
-//             const storedCode = req.session.verificationCode
-//         // console.log(`from confirm code ${storedCode}`);
-
-
-//         if (storedCode !== codeToConfirm) {
-//             return res.status(401).json({ message: 'Invalid verification code' });
-//         }
-
-//         // Respond with a success message
-//         res.status(200).json({ succes: true, message: 'Verification code confirmed successfully' });
-
-//     } catch (error) {
-//         console.error(error);
-//         // Handle errors and respond with a 500 Internal Server Error
-//         res.status(500).json({ message: 'Internal Server Error' });
-//     }
-// };
-
-
 // Final Registration Step
 exports.registerUser = async (req, res) => {
     const id = req.params.id
     try {
 
         const { fullName, registrationNumber, password, confirmPassword } = req.body;
+
+        console.log(fullName);
+        console.log(registrationNumber);
+        console.log(password);
+        console.log(confirmPassword);
         if (!fullName || !registrationNumber || !password || !confirmPassword) {
             return res.status(400).json({ message: 'All fields are required.' });
         }
@@ -217,13 +178,11 @@ exports.registerUser = async (req, res) => {
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-
-        // const { fullName, registrationNumber, password } = req.body;
         const user = await User.findOne({ _id: id });
 
         if (!user || !user.verified) {
-            // Send a response to the client if the account is not found or not verified
-            res.status(404).json({ message: 'User not found or not verified' });
+
+            res.status(404).json({ message: 'User not found` or not verified' });
             return;
         }
 
@@ -233,26 +192,7 @@ exports.registerUser = async (req, res) => {
         await user.save();
 
         // Send a response to the client
-        res.status(200).json({ success: true, message: 'User information updated' });
-
-        // // Check if the user already exists
-        // const existingUser = await User.findOne({ email });
-
-        // if (existingUser) {
-        //     return res.status(409).json({ message: 'User already exists' });
-        // }
-
-        // // Create a new user with the collected data
-        // const newUser = new User({
-        //     email,
-        //     fullName,
-        //     registrationNumber,
-        //     password: hashedPassword,
-        // });
-
-        // // Save the user to the database
-        // await newUser.save();
-        // res.status(201).json({ success: true, message: 'User registered successfully.' });
+        res.status(200).json({ success: true, message: 'User information submitted successfully' });
 
     } catch (error) {
         console.error(error);
@@ -272,7 +212,6 @@ exports.loginUser = async (req, res) => {
     }
 
     try {
-        // Find the user with the provided email
         const user = await User.findOne({ email });
 
         if (!user) {
@@ -286,12 +225,12 @@ exports.loginUser = async (req, res) => {
             return res.status(401).json({ message: 'Invalid password.' });
         }
 
-        // Include the user ID in the response
         res.status(200).json({
             success: true,
             userId: user._id,
             name: user.fullName,
             balance: user.balance,
+            count: user.totalTransactions,
             message: 'Login successful.',
         });
     } catch (error) {
