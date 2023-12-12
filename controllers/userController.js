@@ -223,10 +223,16 @@ exports.addFund = async (req, res) => {
         await transaction.save();
 
         const userTransactions = await Transaction.find({ user: user._id });
-        const userBalance = user.balance;
-        const userTotalNumberOftransactions = user.totalTransactions
-        console.log(userBalance);
-        res.status(200).json({ success: true, message: 'fund added successfully', userTotalNumberOftransactions, userBalance, userTransactions })
+        // const userBalance = user.balance;
+        // const userTotalNumberOftransactions = user.totalTransactions
+        // console.log(userBalance);
+        res.status(200).json({
+            success: true,
+            message: 'fund added successfully',
+            count: user.totalTransactions,
+            balance: user.balance,
+            userTransactions
+        })
     } catch (error) {
         console.error('Error processing payment:', error);
         res.status(500).json({ message: 'Error processing payment' });
