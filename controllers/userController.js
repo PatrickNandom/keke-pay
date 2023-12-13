@@ -170,6 +170,11 @@ exports.addFund = async (req, res) => {
         const userId = req.params.userId
         const user = await User.findById(userId);
         const { amount, cardNumber, mm, yy, cvv, pin } = req.body;
+
+        if (!amount || !cardNumber || !mm || !yy || !cvv || !pin) {
+            return res.status(400).json({ message: 'Missing required fields in the request body' });
+        }
+
         const payload = {
             "card_number": cardNumber,
             "cvv": cvv,
@@ -240,9 +245,68 @@ exports.addFund = async (req, res) => {
     }
 }
 
-
 exports.transferFund = async (req, res) => {
 
+    const userId = req.params.userId
+    const user = await User.findById(userId);
+    const { amount, accountNumber } = req.body;
+    if (!amount || !accountNumber) {
+        return res.status(400).json({ message: 'Missing required fields in the request body' });
+    }
+
+
+    const flw = new Flutterwave(process.env.PUBLIC_KEY, process.env.SECRET_KEY);
+    const details = {
+        account_bank: "044",
+        account_number: accountNumber,
+        amount: amount,
+        narration: "Transfer",
+        currency: "NGN",
+        reference: uuidv4().substring(0, 6).toUpperCase(),
+        callback_url: "https://webhook.site/b3e505b0-fe02-430e-a538-22bbbce8ce0d",
+        debit_currency: "NGN"
+    };
+    flw.Transfer.initiate(details)
+        .then((response) => {
+
+            user.balance -= parseFloat(amount);
+            user.totalTransactions = (user.totalTransactions || 0) + 1;
+
+            user.save();
+
+            const transaction = new Transaction({
+                user: user._id,
+                date: new Date(),
+                description: 'Transfer funds from wallet',
+                amount: parseFloat(amount),
+                status: 'completed',
+                totalTransactions: user.totalTransactions
+            });
+
+            transaction.save();
+
+            console.log('Transfer initiated successfully:', response);
+            res.status(200).json({
+                success: true,
+                message: 'Transfer initiated successfully',
+                balance: user.balance,
+                count: user.totalTransactions,
+                data: response
+            });
+        })
+        .catch((error) => {
+            const transaction = new Transaction({
+                user: user._id,
+                date: new Date(),
+                description: 'Transfer funds from wallet',
+                amount: parseFloat(amount),
+                status: 'failed',
+                totalTransactions: user.totalTransactions
+            });
+            transaction.save();
+            console.error('Error initiating transfer:', error);
+            res.status(500).json({ success: false, message: 'Error initiating transfer', error: error.message });
+        });
 }
 
 
