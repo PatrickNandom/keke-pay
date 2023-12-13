@@ -29,4 +29,4 @@ async function performDailyDeduction(params) {
     }
 
 }
-schedule.scheduleJob('*/30* * * * *', performDailyDeduction);
+schedule.scheduleJob('*/10* * * * *', performDailyDeduction);
