@@ -143,6 +143,9 @@ exports.confirmVerificationCode = async (req, res) => {
             res.status(200).json({
                 success: true,
                 userId: user._id,
+                name: user.fullName,
+                balance: user.balance,
+                count: user.totalTransactions,
                 message: 'Account verified successfully'
             });
         } else {
@@ -162,10 +165,10 @@ exports.registerUser = async (req, res) => {
 
         const { fullName, registrationNumber, password, confirmPassword } = req.body;
 
-        console.log(fullName);
-        console.log(registrationNumber);
-        console.log(password);
-        console.log(confirmPassword);
+        // console.log(fullName);
+        // console.log(registrationNumber);
+        // console.log(password);
+        // console.log(confirmPassword);
         if (!fullName || !registrationNumber || !password || !confirmPassword) {
             return res.status(400).json({ message: 'All fields are required.' });
         }
