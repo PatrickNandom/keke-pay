@@ -1,5 +1,7 @@
 const Agent = require('../models/Agent');
 const bcrypt = require('bcrypt');
+const { MongoClient, ObjectId } = require('mongodb');
+
 
 
 
@@ -70,3 +72,101 @@ exports.loginAgent = async (req, res) => {
     }
 
 }
+
+
+exports.upDateAgent = async (req, res) => {
+    const { id } = req.params;
+    const { fullName, email, } = req.body;
+
+    if (!fullName || !email) {
+        res.status(404).json({ message: 'input field cannot be empty' })
+    }
+
+    try {
+        // Check if the user exists
+        const existingAgent = await Agent.findById(id);
+
+        if (!existingAgent) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Prepare the updated user data
+        const updatedUserAgentData = {};
+
+        if (fullName) {
+            updatedUserAgentData.fullName = fullName;
+        }
+
+        if (email) {
+            updatedUserAgentData.email = email;
+        }
+
+
+
+        // Perform the update
+        const updatedAgent = await Agent.findByIdAndUpdate(id, updatedUserAgentData, { new: true });
+
+        // Return the updated user data
+        res.status(200).json(updatedAgent);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Failed to update user' });
+    }
+};
+
+
+exports.changePassword = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const { currentPassword, newPassword, confirmPassword } = req.body;
+
+        if (!currentPassword || newPassword || confirmPassword) {
+            return res.status(404).json({ message: 'input fields cannot be empty' });
+
+        }
+
+
+        // Fetch the user from the MongoDB collection
+        const agent = await client.db("keke-pay").collection("agents").findOne({ _id: new ObjectId(userId) });
+
+        if (!agent) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (newPassword !== confirmPassword) {
+            return res.status(401).json({ message: 'Password do not match' });
+        }
+
+
+        // Check if the current password matches
+        const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: 'Invalid current password' });
+        }
+
+        // Hash the new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update the user's password in the MongoDB collection
+        const result = await client.db("keke-pay").collection("agents").updateOne(
+            { _id: new ObjectId(userId) },
+            {
+                $set: {
+                    password: hashedPassword,
+                },
+            }
+        );
+
+        // Check if the update was successful
+        if (result.matchedCount > 0) {
+            res.status(200).json({ message: 'Password changed successfully' });
+        } else {
+            res.status(404).json({ message: 'User not found' });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};

@@ -195,7 +195,7 @@ exports.registerUser = async (req, res) => {
         await user.save();
 
         // Send a response to the client
-        res.status(200).json({ success: true, message: 'User information submitted successfully' });
+        res.status(200).json({ success: true, name: user.fullName, message: 'User information submitted successfully' });
 
     } catch (error) {
         console.error(error);
