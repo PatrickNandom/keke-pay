@@ -11,6 +11,7 @@ const mongoose = require('mongoose');
 const authRouter = require('./routes/authRoutes');
 const userRouter = require('./routes/userRoute');
 const paymentRouter = require('./routes/paymentRoute');
+const agentRouter = require('./routes/agentRoute');
 
 // app.use((req, res, next) => {
 //   res.header('Access-Control-Allow-Origin', 'https://frontend-keke-pay.vercel.app');
@@ -29,10 +30,11 @@ app.use(express.json());
 // Enable CORS for Express application
 app.use(cors({ origin: "*" }));
 
-
+//midlewares
 app.use('/verification', authRouter);
 app.use('/user', userRouter);
 app.use('/', paymentRouter);
+app.use('/', agentRouter);
 
 //mongoDB connection+
 const uri = process.env.URI
