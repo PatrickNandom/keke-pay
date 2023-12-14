@@ -254,6 +254,11 @@ exports.transferFund = async (req, res) => {
         return res.status(400).json({ message: 'Missing required fields in the request body' });
     }
 
+    if (parseFloat(amount) > user.balance) {
+        return res.status(400).json({ message: 'Insufficient funds for the transfer' });
+    }
+
+
 
     const flw = new Flutterwave(process.env.PUBLIC_KEY, process.env.SECRET_KEY);
     const details = {
