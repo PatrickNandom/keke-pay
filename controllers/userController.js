@@ -239,8 +239,8 @@ exports.addFund = async (req, res) => {
             userTransactions
         })
     } catch (error) {
-        console.error('Error processing payment:', error);
         res.status(500).json({ message: 'Error processing payment' });
+        console.error('Error processing payment:', error);
 
     }
 }
