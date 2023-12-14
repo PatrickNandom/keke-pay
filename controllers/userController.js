@@ -88,7 +88,7 @@ exports.upDateUser = async (req, res) => {
         const updatedUser = await User.findByIdAndUpdate(id, updatedUserData, { new: true });
 
         // Return the updated user data
-        res.status(200).json(updatedUser);
+        res.status(200).json({ message: 'Registration was successful', updatedUser, name: existingUser.fullName });
 
     } catch (error) {
         console.error(error);
