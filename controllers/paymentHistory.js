@@ -10,6 +10,31 @@ exports.getAllPayments = async (req, res) => {
     }
 };
 
+exports.getPaymentByReceiptNumber = async (req, res) => {
+
+    const { receiptNumber } = req.body
+    try {
+
+        console.log(receiptNumber);
+        const payments = await Payment.findOne({ receiptNumber });
+
+        // console.log(payments);
+
+        if (!payments) {
+            return res.status(401).json({ message: 'no record found' })
+        }
+
+        res.status(200).json({ payments });
+
+    } catch (error) {
+
+        console.error(error);
+
+
+    }
+
+}
+
 exports.getPaymentsOfSingleUser = async (req, res) => {
     const userId = req.params.userId;
 

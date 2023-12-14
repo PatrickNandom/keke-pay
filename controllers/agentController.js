@@ -3,7 +3,8 @@ const bcrypt = require('bcrypt');
 const { MongoClient, ObjectId } = require('mongodb');
 
 
-
+const client = new MongoClient(process.env.URI);
+client.connect();
 
 exports.registerAgent = async (req, res) => {
 
@@ -65,7 +66,11 @@ exports.loginAgent = async (req, res) => {
             return res.status(401).json({ message: 'Invalid password.' });
         }
 
-        res.status(200).json({ success: true, message: 'Login successful.', });
+        res.status(200).json({
+            success: true,
+            message: 'Login successful.',
+            agentId: agent._id
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Login failed.' });
@@ -78,9 +83,9 @@ exports.upDateAgent = async (req, res) => {
     const { id } = req.params;
     const { fullName, email, } = req.body;
 
-    if (!fullName || !email) {
-        res.status(404).json({ message: 'input field cannot be empty' })
-    }
+    // if (!fullName || !email) {
+    //     res.status(404).json({ message: 'input field cannot be empty' })
+    // }
 
     try {
         // Check if the user exists
@@ -107,7 +112,7 @@ exports.upDateAgent = async (req, res) => {
         const updatedAgent = await Agent.findByIdAndUpdate(id, updatedUserAgentData, { new: true });
 
         // Return the updated user data
-        res.status(200).json(updatedAgent);
+        res.status(200).json({ message: 'profile updated successsfully', updatedAgent });
 
     } catch (error) {
         console.error(error);
@@ -118,17 +123,22 @@ exports.upDateAgent = async (req, res) => {
 
 exports.changePassword = async (req, res) => {
     try {
-        const userId = req.params.userId;
+        const agentId = req.params.agentId;
+        console.log('agent id ' + agentId);
         const { currentPassword, newPassword, confirmPassword } = req.body;
 
-        if (!currentPassword || newPassword || confirmPassword) {
-            return res.status(404).json({ message: 'input fields cannot be empty' });
+        console.log(currentPassword);
+        console.log(newPassword);
+        console.log(confirmPassword);
 
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            return res.status(404).json({ message: 'Input fields cannot be empty' });
         }
 
 
+
         // Fetch the user from the MongoDB collection
-        const agent = await client.db("keke-pay").collection("agents").findOne({ _id: new ObjectId(userId) });
+        const agent = await client.db("keke-pay").collection("agents").findOne({ _id: new ObjectId(agentId) });
 
         if (!agent) {
             return res.status(404).json({ message: 'User not found' });
@@ -140,7 +150,7 @@ exports.changePassword = async (req, res) => {
 
 
         // Check if the current password matches
-        const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+        const isPasswordValid = await bcrypt.compare(currentPassword, agent.password);
 
         if (!isPasswordValid) {
             return res.status(401).json({ message: 'Invalid current password' });
@@ -151,7 +161,7 @@ exports.changePassword = async (req, res) => {
 
         // Update the user's password in the MongoDB collection
         const result = await client.db("keke-pay").collection("agents").updateOne(
-            { _id: new ObjectId(userId) },
+            { _id: new ObjectId(agentId) },
             {
                 $set: {
                     password: hashedPassword,
@@ -166,7 +176,7 @@ exports.changePassword = async (req, res) => {
             res.status(404).json({ message: 'User not found' });
         }
     } catch (error) {
-        console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
+        console.error(error);
     }
 };
