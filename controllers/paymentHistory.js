@@ -24,7 +24,13 @@ exports.getPaymentByReceiptNumber = async (req, res) => {
             return res.status(401).json({ message: 'no record found' })
         }
 
-        res.status(200).json({ payments });
+        payments.count = (payments.count || 0) + 1;
+
+        payments.save();
+
+
+
+        res.status(200).json({ count: payments.count, payments });
 
     } catch (error) {
 

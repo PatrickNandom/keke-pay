@@ -30,6 +30,9 @@ const paymentSchema = new mongoose.Schema({
         type: String,
         enum: ['pending', 'completed'],
         default: 'pending'
+    }, count: {
+        type: Number,
+        default: 0
     }
 });
 
