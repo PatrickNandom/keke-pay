@@ -10,6 +10,7 @@ exports.getAllPayments = async (req, res) => {
     }
 };
 
+let count = 0;
 exports.getPaymentByReceiptNumber = async (req, res) => {
 
     const { receiptNumber } = req.body
@@ -24,13 +25,16 @@ exports.getPaymentByReceiptNumber = async (req, res) => {
             return res.status(401).json({ message: 'no record found' })
         }
 
-        payments.count = (payments.count || 0) + 1;
+        // payments.count = (payments.count || 0) + 1;
 
-        payments.save();
+        // payments.save();
+
+        count++;
 
 
 
-        res.status(200).json({ count: payments.count, payments });
+
+        res.status(200).json({ count, payments });
 
     } catch (error) {
 
