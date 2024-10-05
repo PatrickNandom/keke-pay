@@ -10,5 +10,4 @@ Enforcer Verification: Simplifies the process of verifying payments in real-time
 **Tech Stack**
 Backend: Node.js, Express
 Database: MongoDB
-Mobile App: Flutter (Frontend)
 Payment Integration: Payment Gateway API
